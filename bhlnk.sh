@@ -287,7 +287,7 @@ elif [[ config -eq 1 ]]; then
 #
 	for ((i = 0 ; i < 3 ; i++)); do
   	 echo "- Repack ${part[$i]}.new.dat"
-		brotli -6 -j -w 24 "$bro/${part[$i]}.new.dat" -o "$bro/${part[$i]}.new.dat.br" 
+		brotli -7 -j -w 24 "$bro/${part[$i]}.new.dat" -o "$bro/${part[$i]}.new.dat.br" 
 		rm -rf "$bro/${part[$i]}.new.dat"
 	done
 	if [ -d $bro/META-INF ]; then
