@@ -34,13 +34,13 @@ jobs:
            
        - name: Download zip... and run
          run: |
-            cd $GITHUB_WORKSPACE/MIUI_VIETSUB
+            cd $GITHUB_WORKSPACE
             chmod +x download.sh
             chmod +x bhlnk.sh
             sudo bash download.sh $ROM_URL 
        - name: Upload to transfer
          run: |
-            cd $GITHUB_WORKSPACE/MIUI_VIETSUB
+            cd $GITHUB_WORKSPACE
             zip_name=$(ls *.zip | grep "vietsub")
             curl --upload-file $zip_name https://transfer.sh/"$zip_name"
 
