@@ -6,6 +6,10 @@ bin="$dir/bin/linux"
 bro="$dir/zip_temp"
 chmod -R 777 $bin
 chmod -R 777 $dir/bin
+if [[ ! -f bin/gsm.img  ]]; then
+	wget https://github.com/buihien224/host/releases/download/store/gsm.img
+	mv gsm.img $dir/module
+fi
 config=0;
 getszie()
 {
