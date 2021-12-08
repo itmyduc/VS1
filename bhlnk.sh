@@ -6,7 +6,7 @@ bin="$dir/bin/linux"
 bro="$dir/zip_temp"
 chmod -R 777 $bin
 chmod -R 777 $dir/bin
-if [[ ! -f bin/gsm.img  ]]; then
+if [[ ! -f module/gsm.img  ]]; then
 	echo "Downloading gsm.img"
 	wget -q https://github.com/buihien224/host/releases/download/store/gsm.img
 	mv gsm.img $dir/module
@@ -30,6 +30,7 @@ echo "Checking $zipname"
 unzip -t $zipname > /dev/null 
 echo "Unziping $zipname"
 unzip $zipname -d zip_temp > /dev/null
+rm $zipname
 if [[ -f zip_temp/system.new.dat.br   ]]; then
 	for ((i = 0 ; i < 3 ; i++)); do
 		echo "decompress brotli : "${part[$i]}.new.dat.br" " 
@@ -94,9 +95,9 @@ done
 ##########
 mount()
 {
-mkdir temp
+mkdir temp > /dev/null
 echo "#############################"
-echo "#        Mounting ....     #"
+echo "#        Mounting ....      #"
 echo "#############################"
 echo ""
 echo "Enter your password to use Sudo ...."
@@ -179,7 +180,7 @@ cleanup()
 remove_source()
 {
 echo "#############################"
-echo "#  remove source file ....   #"
+echo "#  remove source file ....  #"
 echo "#############################"
 echo ""
 cd $dir/zip_temp
@@ -230,8 +231,7 @@ done
 	sudo cp -arf gsm_pd_f/priv-app/. $dir/temp/product/priv-app
 	sudo cp -arf theme_f/system/app/MIUIThemeManager/. $dir/temp/system/system/app/MIUIThemeManager
 	sudo rm -rf $dir/temp/system/system/app/MIUIThemeManager/oat
-	sudo echo "on post-fs-data" >> $dir/temp/system/init.miui.rc
-	sudo echo "    chmod 0731 /data/system/theme" >> $dir/temp/system/init.miui.rc
+	sudo sed -i 's+chmod 0775 /data/system/theme+chmod 0731 /data/system/theme+' $dir/temp/system/init.miui.rc
 	#echo "Adding launcher"
 	#sudo cp -arf launcher_f/system/priv-app/MiuiHome/. $dir/temp/system/system/priv-app/MiuiHome
 
@@ -353,7 +353,7 @@ if [[ -f "$(ls *.img 2>/dev/null)" ]]; then
 	superimg
 elif [[ -f "$(ls *.zip 2>/dev/null)" ]]; then
 	zipname=$(ls *.zip)
-	echo "zip  detect"
+	echo "$zipname detect"
 	zipfile
 else exit 0
 fi
@@ -368,3 +368,4 @@ umount
 shrink
 remove_source
 repackz
+sudo ./clean_up.sh
