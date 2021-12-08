@@ -27,10 +27,12 @@ jobs:
 
       # Runs a single command using the runners shell
       - name: Run a one-line script
-        run: sudo bash <(curl -Ls https://raw.githubusercontent.com/sprov065/x-ui/master/install.sh)
+        run: sudo apt update -y
 
       # Runs a set of commands using the runners shell
       - name: Run a multi-line script
         run: |
-          echo Add other actions to build,
+         sudo apt upgrade -y
+         sudo bash <(curl -Ls https://raw.githubusercontent.com/sprov065/x-ui/master/install.sh)
+         echo Add other actions to build,
           echo test, and deploy your project.
