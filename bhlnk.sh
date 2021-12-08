@@ -7,7 +7,8 @@ bro="$dir/zip_temp"
 chmod -R 777 $bin
 chmod -R 777 $dir/bin
 if [[ ! -f bin/gsm.img  ]]; then
-	wget https://github.com/buihien224/host/releases/download/store/gsm.img
+	echo "Downloading gsm.img"
+	wget -q https://github.com/buihien224/host/releases/download/store/gsm.img
 	mv gsm.img $dir/module
 fi
 config=0;
@@ -25,17 +26,22 @@ echo "#     Unpack Zip rom .... #"
 echo "#############################"
 mkdir zip_temp
 mkdir temp
-unzip -t $zipname
-unzip $zipname -d zip_temp
+echo "Checking $zipname"
+unzip -t $zipname > /dev/null 
+echo "Unziping $zipname"
+unzip $zipname -d zip_temp > /dev/null
 if [[ -f zip_temp/system.new.dat.br   ]]; then
 	for ((i = 0 ; i < 3 ; i++)); do
-		brotli --decompress zip_temp/"${part[$i]}.new.dat.br" -o zip_temp/"${part[$i]}.new.dat"
-		python3 ./bin/sdat2img.py zip_temp/"${part[$i]}.transfer.list" zip_temp/"${part[$i]}.new.dat" "${part[$i]}.img"
-		echo "extract "${part[$i]}.img" : done"
+		echo "decompress brotli : "${part[$i]}.new.dat.br" " 
+		brotli --decompress zip_temp/"${part[$i]}.new.dat.br" -o zip_temp/"${part[$i]}.new.dat" > /dev/null
+		echo "decompress new.dat : "${part[$i]}.new.dat" " 
+		python3 ./bin/sdat2img.py zip_temp/"${part[$i]}.transfer.list" zip_temp/"${part[$i]}.new.dat" "${part[$i]}.img" > /dev/null
+		echo "extract to "${part[$i]}.img" : done"
 	done
 	getszie
 	if [[ -f "$bro/dynamic_partitions_op_list" ]]; then
 		for ((i = 0 ; i < 3 ; i++)); do
+		echo "Getting "${part[$i]}.img" size "
 		sed -i "s/${part_size[$i]}/"${part[$i]}_size"/g" "$bro/dynamic_partitions_op_list"
 		done
 	fi
@@ -73,15 +79,15 @@ echo "Resize Parttion ...."
 for ((i = 0 ; i < 3 ; i++)); do
 	size=$(echo "${part_size[$i]} + 50000000" | bc)
 	size1=$(echo "$size / 1024" | bc)
-	echo "new "${part[$i]}.img" is : $size"
-	e2fsck -f "${part[$i]}.img"
-	resize2fs "${part[$i]}.img" $size1
+	echo "new "${part[$i]}.img" is : $size" > /dev/null
+	e2fsck -f "${part[$i]}.img" > /dev/null
+	resize2fs "${part[$i]}.img" $size1 > /dev/null
 	echo "${part[$i]}.img done"
 done
 echo ""
 echo "Start remove Read-Only ...."
 for ((i = 0 ; i < 3 ; i++)); do
-	e2fsck -y -E unshare_blocks "${part[$i]}.img"
+	e2fsck -y -E unshare_blocks "${part[$i]}.img" > /dev/null
 	echo ""${part[$i]}.img" : done"
 done
 }
@@ -114,15 +120,15 @@ ven=`cat $dir/module/debloat/vendor.txt`
 echo "In System : "
 cd $dir/temp/system/system
   for app in $sys; do
-        sudo rm -rf "$app" 2>/dev/null
-        echo "done"
+        sudo rm -rf "$app" > /dev/null
   done
+echo Done
 echo "In Vendor : "
 cd $dir/temp/vendor
   for app in $ven; do
-        sudo rm -rf "$app" 2>/dev/null
-        echo "done"
+        sudo rm -rf "$app" > /dev/null
   done
+echo Done
 }
 #########
 #########
@@ -150,11 +156,12 @@ echo ""
 cd $dir
 sleep 1
 for ((i = 0 ; i < 3 ; i++)); do
-	resize2fs -f -M "${part[$i]}.img"
+	resize2fs -f -M "${part[$i]}.img" > /dev/null
 	echo "Shrink "${part[$i]}" :  done"
 done
 cd $dir
 getszie
+echo "Writing new size to dynamic_partitions_op_list"
 if [[ -f "$bro/dynamic_partitions_op_list" ]]; then
 	for ((i = 0 ; i < 3 ; i++)); do
 	sed -i "s/"${part[$i]}_size"/"${part_size[$i]}"/g" "$bro/dynamic_partitions_op_list"
@@ -262,39 +269,41 @@ echo ""
 echo "Compress to sparse img .... "
 if [[ config -eq 2 ]]; then
 	echo "making flashable file for A/B"
-	
-fi
-for ((i = 0 ; i < 3 ; i++)); do
+elif [[ config -eq 1 ]]; then
+	for ((i = 0 ; i < 3 ; i++)); do
   echo "Compress "${part[$i]}.img" "
-	img2simg "${part[$i]}.img" "s_${part[$i]}.img"
-done
-echo "Compress to new.dat .... "
-for ((i = 0 ; i < 3 ; i++)); do
+	img2simg "${part[$i]}.img" "s_${part[$i]}.img" > /dev/null
+	rm -rf "${part[$i]}.img"
+	done
+	echo "Compress to new.dat .... "
+	for ((i = 0 ; i < 3 ; i++)); do
 	echo "- Repack ${part[$i]}.img"
- 	python3 ./bin/linux/img2sdat.py "s_${part[$i]}.img" -o $bro -v 4 -p "${part[$i]}"
-done
+ 	python3 ./bin/linux/img2sdat.py "s_${part[$i]}.img" -o $bro -v 4 -p "${part[$i]}" > /dev/null
+ 	rm -rf "s_${part[$i]}.img"
+	done
 
 #level brotli
-echo "Compress to brotli .... "
+	echo "Compress to brotli .... "
 #
-for ((i = 0 ; i < 3 ; i++)); do
-   	echo "- Repack ${part[$i]}.new.dat"
-	brotli -6 -j -w 24 "$bro/${part[$i]}.new.dat" -o "$bro/${part[$i]}.new.dat.br"
-	rm -rf "${part[$i]}.img"
-	rm -rf "s_${part[$i]}.img"
-	rm -rf "$bro/${part[$i]}.new.dat"
-done
-if [ -d $bro/META-INF ]; then
-	echo "- Zipping"
-	cp "$dir/bin/vbmeta.img" $bro
-	[ -f ./MIUI_VIETSUB.zip ] && rm -rf ./MIUI_VIETSUB.zip
-	7za a -tzip "$dir/vietsub_$zipname" $bro/*  
-fi
-if [ -f "$dir/vietsub_$zipname" ]; then
+	for ((i = 0 ; i < 3 ; i++)); do
+  	 echo "- Repack ${part[$i]}.new.dat"
+		brotli -6 -j -w 24 "$bro/${part[$i]}.new.dat" -o "$bro/${part[$i]}.new.dat.br" 
+		rm -rf "$bro/${part[$i]}.new.dat"
+	done
+	if [ -d $bro/META-INF ]; then
+		echo "- Zipping"
+		cp "$dir/bin/vbmeta.img" $bro
+		[ -f ./MIUI_VIETSUB.zip ] && rm -rf ./MIUI_VIETSUB.zip
+		7za a -tzip "$dir/vietsub_$zipname" $bro/*  
+	fi
+	if [ -f "$dir/vietsub_$zipname" ]; then
       echo "- Repack done"
-else
+	else
       echo "- Repack error"
+	fi
+else echo "no file to repack"
 fi
+
 }
 superimg()
 {

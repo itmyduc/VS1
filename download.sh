@@ -1,4 +1,4 @@
 #!/bin/bash
 echo "Starting donwload rom and auto run bhlnk script"
-wget $1
+wget -q $1
 ./bhlnk.sh
