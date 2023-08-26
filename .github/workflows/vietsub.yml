@@ -38,12 +38,10 @@ jobs:
             chmod +x download.sh
             chmod +x bhlnk.sh
             sudo bash download.sh $ROM_URL 
-        - name: Tải lên
-        uses: softprops/action-gh-release@v1
-        with:
-          tag: 
-          name: Tool ZH-VN
-          tag_name: Package
-          files: VH_*.zip
-          prerelease: true
-          generate_release_notes: true
+        - name: Upload 
+         uses: Difegue/action-megacmd@1.2.0
+         with:
+          args: put $(ls | grep "Rom") /
+         env:
+          USERNAME: ${{ github.event.inputs.email }} 
+          PASSWORD: ${{ github.event.inputs.pwd }}
